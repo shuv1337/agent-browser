@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useAtomCallback } from "jotai/utils";
 import type { SessionInfo } from "@/types";
 import { execCommand, killSession, sessionArgs } from "@/lib/exec";
+import { httpUrl } from "@/lib/url";
 import { tabCacheAtom, engineCacheAtom } from "@/store/tabs";
 import { streamTabsAtom, streamEngineAtom } from "@/store/stream";
 
@@ -24,7 +25,7 @@ function getSessionsUrl(): string {
       return "/api/sessions";
     }
   }
-  return `http://localhost:${DASHBOARD_PORT}/api/sessions`;
+  return `${httpUrl(DASHBOARD_PORT)}/api/sessions`;
 }
 
 // ---------------------------------------------------------------------------
@@ -223,7 +224,7 @@ export function useSessionsSync(pollInterval = 5000) {
             for (const s of data) {
               try {
                 const tabsResp = await fetch(
-                  `http://localhost:${s.port}/api/tabs`,
+                  `${httpUrl(s.port)}/api/tabs`,
                 ).catch(() => null);
                 if (tabsResp?.ok) {
                   const tabs = await tabsResp.json();

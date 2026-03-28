@@ -9,6 +9,7 @@ import type {
   StreamMessage,
   TabInfo,
 } from "@/types";
+import { wsUrl } from "@/lib/url";
 import { activePortAtom } from "@/store/sessions";
 import { tabCacheAtom, engineCacheAtom } from "@/store/tabs";
 
@@ -119,7 +120,7 @@ export function useStreamSync(port: number) {
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-    const ws = new WebSocket(`ws://localhost:${port}`);
+    const ws = new WebSocket(wsUrl(port));
     wsRef.current = ws;
     setWsRef(ws);
 

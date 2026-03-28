@@ -236,7 +236,7 @@ When a JavaScript dialog (`alert`, `confirm`, `prompt`) is pending, all command 
 
 ```bash
 agent-browser stream enable           # Start runtime WebSocket streaming on an auto-selected port
-agent-browser stream enable --port 9223  # Bind a specific localhost port
+agent-browser stream enable --port 9223  # Bind a specific port
 agent-browser stream status           # Show enabled state, port, browser connection, screencasting
 agent-browser stream disable          # Stop runtime streaming and remove the .stream metadata file
 ```
@@ -329,7 +329,8 @@ agent-browser session list            # List active sessions
 ## Dashboard
 
 ```bash
-agent-browser dashboard [start]       # Start the dashboard server (default port: 4848)
+agent-browser dashboard [start]       # Start the dashboard server (default: 0.0.0.0:4848)
+agent-browser dashboard start --host <addr>  # Start on a specific host/interface
 agent-browser dashboard start --port <n>  # Start on a specific port
 agent-browser dashboard stop          # Stop the dashboard server
 agent-browser dashboard install       # Install the dashboard files

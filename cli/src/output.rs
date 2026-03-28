@@ -123,7 +123,7 @@ fn format_stream_status_text(action: Option<&str>, data: &serde_json::Value) -> 
                 .unwrap_or(false);
 
             Some(format!(
-                "Streaming enabled on ws://127.0.0.1:{port}\nConnected: {connected}\nScreencasting: {screencasting}"
+                "Streaming enabled on ws://0.0.0.0:{port}\nConnected: {connected}\nScreencasting: {screencasting}"
             ))
         }
         _ => None,
@@ -2403,7 +2403,7 @@ Manage the observability dashboard, a local web UI that shows live
 browser viewports and command activity feeds for all sessions.
 
 Subcommands:
-  start [--port <n>]   Start the dashboard server (default port: 4848)
+  start [--host <addr>] [--port <n>]   Start the dashboard server (default host: 0.0.0.0, default port: 4848)
   stop                 Stop the dashboard server
   install              Download and install the dashboard to ~/.agent-browser/dashboard/
 
@@ -2413,6 +2413,7 @@ The dashboard runs as a standalone background process, independent of
 browser sessions. All sessions automatically stream to the dashboard.
 
 Options:
+  --host <addr>        Host/interface for the dashboard server (default: 0.0.0.0)
   --port <n>           Port for the dashboard server (default: 4848)
 
 Global Options:
@@ -2421,6 +2422,7 @@ Global Options:
 Examples:
   agent-browser dashboard install
   agent-browser dashboard start
+  agent-browser dashboard start --host 127.0.0.1
   agent-browser dashboard start --port 8080
   agent-browser dashboard stop
 "##
@@ -2478,7 +2480,7 @@ Usage:
 
 Enables or disables the session-scoped WebSocket stream server without restarting
 an already-running daemon. If --port is omitted, agent-browser binds an
-available localhost port automatically and reports it back.
+available port on all interfaces automatically and reports it back.
 
 Notes:
   - 'stream enable' creates the WebSocket server.
@@ -2768,7 +2770,8 @@ Sessions:
   session list               List active sessions
 
 Dashboard:
-  dashboard [start]          Start the dashboard server (default port: 4848)
+  dashboard [start]          Start the dashboard server (default: 0.0.0.0:4848)
+  dashboard start --host <a> Start on a specific host/interface
   dashboard start --port <n> Start on a specific port
   dashboard stop             Stop the dashboard server
 
@@ -3028,7 +3031,7 @@ mod tests {
 
         assert_eq!(
             rendered,
-            "Streaming enabled on ws://127.0.0.1:9223\nConnected: true\nScreencasting: false"
+            "Streaming enabled on ws://0.0.0.0:9223\nConnected: true\nScreencasting: false"
         );
     }
 

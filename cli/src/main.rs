@@ -202,6 +202,10 @@ fn get_dashboard_pid_path() -> std::path::PathBuf {
     get_socket_dir().join("dashboard.pid")
 }
 
+fn format_dashboard_url(host: &str, port: u16) -> String {
+    format!("http://{}:{}", host, port)
+}
+
 fn is_pid_alive(pid: u32) -> bool {
     #[cfg(unix)]
     {
@@ -221,7 +225,7 @@ fn is_pid_alive(pid: u32) -> bool {
     }
 }
 
-fn run_dashboard_start(port: u16, json_mode: bool) {
+fn run_dashboard_start(host: &str, port: u16, json_mode: bool) {
     let pid_path = get_dashboard_pid_path();
 
     // Check if already running
@@ -231,10 +235,13 @@ fn run_dashboard_start(port: u16, json_mode: bool) {
                 if json_mode {
                     print_json_value(json!({
                         "success": true,
-                        "data": { "port": port, "pid": pid, "already_running": true },
+                        "data": { "host": host, "port": port, "pid": pid, "already_running": true },
                     }));
                 } else {
-                    println!("Dashboard already running at http://localhost:{}", port);
+                    println!(
+                        "Dashboard already running at {}",
+                        format_dashboard_url(host, port)
+                    );
                 }
                 return;
             }
@@ -265,6 +272,7 @@ fn run_dashboard_start(port: u16, json_mode: bool) {
 
     let mut cmd = std::process::Command::new(&exe_path);
     cmd.env("AGENT_BROWSER_DASHBOARD", "1")
+        .env("AGENT_BROWSER_DASHBOARD_HOST", host)
         .env("AGENT_BROWSER_DASHBOARD_PORT", port.to_string());
 
     #[cfg(unix)]
@@ -299,10 +307,10 @@ fn run_dashboard_start(port: u16, json_mode: bool) {
             if json_mode {
                 print_json_value(json!({
                     "success": true,
-                    "data": { "port": port, "pid": pid },
+                    "data": { "host": host, "port": port, "pid": pid },
                 }));
             } else {
-                println!("Dashboard started at http://localhost:{}", port);
+                println!("Dashboard started at {}", format_dashboard_url(host, port));
             }
         }
         Err(e) => {
@@ -501,12 +509,14 @@ fn main() {
 
     // Standalone dashboard server mode
     if env::var("AGENT_BROWSER_DASHBOARD").is_ok() {
+        let host =
+            env::var("AGENT_BROWSER_DASHBOARD_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
         let port: u16 = env::var("AGENT_BROWSER_DASHBOARD_PORT")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(4848);
         let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
-        rt.block_on(native::stream::run_dashboard_server(port));
+        rt.block_on(native::stream::run_dashboard_server(&host, port));
         return;
     }
 
@@ -558,13 +568,19 @@ fn main() {
                 return;
             }
             Some("start") | None => {
+                let host = clean
+                    .iter()
+                    .position(|a| a == "--host")
+                    .and_then(|i| clean.get(i + 1))
+                    .cloned()
+                    .unwrap_or_else(|| "0.0.0.0".to_string());
                 let port = clean
                     .iter()
                     .position(|a| a == "--port")
                     .and_then(|i| clean.get(i + 1))
                     .and_then(|s| s.parse::<u16>().ok())
                     .unwrap_or(4848);
-                run_dashboard_start(port, flags.json);
+                run_dashboard_start(&host, port, flags.json);
                 return;
             }
             Some("stop") => {

@@ -5,6 +5,7 @@ import { useAtomValue, useSetAtom } from "jotai/react";
 import { ArrowLeft, ArrowRight, Camera, Circle, FileCode, Maximize, Moon, RotateCw, Smartphone, Square, Sun, Wifi, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { execCommand, sessionArgs } from "@/lib/exec";
+import { wsUrl } from "@/lib/url";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -139,6 +140,7 @@ export function Viewport() {
   const addressRef = useRef<HTMLInputElement>(null);
   const [addressValue, setAddressValue] = useState(url);
   const [navigating, setNavigating] = useState(false);
+  const [streamEndpoint, setStreamEndpoint] = useState(() => `ws://localhost:${streamPort}`);
   const [canvasArea, setCanvasArea] = useState({ width: 0, height: 0 });
   const [customDialogOpen, setCustomDialogOpen] = useState(false);
   const [customValue, setCustomValue] = useState("");
@@ -165,6 +167,10 @@ export function Viewport() {
   useEffect(() => {
     setAddressValue(url);
   }, [url]);
+
+  useEffect(() => {
+    setStreamEndpoint(wsUrl(streamPort));
+  }, [streamPort]);
 
   useEffect(() => {
     setActiveDevice(null);
@@ -550,7 +556,7 @@ export function Viewport() {
         </span>
         {browserConnected && (
           <span className="text-xs text-muted-foreground/60 font-mono">
-            ws://localhost:{streamPort}
+            {streamEndpoint}
           </span>
         )}
         <div className="ml-auto flex items-center gap-2">

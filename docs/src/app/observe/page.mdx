@@ -18,10 +18,11 @@ Start the dashboard server and open any session -- it appears automatically:
 
 ```bash
 agent-browser dashboard start
+agent-browser dashboard start --host 127.0.0.1
 agent-browser open example.com
 ```
 
-Then open `http://localhost:4848` in your browser to see the live dashboard.
+Then open `http://<server-host>:4848` in your browser to see the live dashboard. The dashboard binds to `0.0.0.0` by default; use `--host` to restrict it to a specific interface.
 
 All sessions automatically stream to the dashboard. No extra flags are needed.
 

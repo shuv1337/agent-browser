@@ -174,7 +174,7 @@ agent-browser pdf output.pdf          # Save as PDF
 
 # Live preview / streaming
 agent-browser stream enable           # Start runtime WebSocket streaming on an auto-selected port
-agent-browser stream enable --port 9223  # Bind a specific localhost port
+agent-browser stream enable --port 9223  # Bind a specific port
 agent-browser stream status           # Inspect enabled state, port, connection, and screencasting
 agent-browser stream disable          # Stop runtime streaming and remove the .stream metadata file
 
@@ -722,6 +722,7 @@ agent-browser dashboard install
 
 # Start the dashboard server (background, port 4848)
 agent-browser dashboard start
+agent-browser dashboard start --host 127.0.0.1
 
 # All sessions are automatically visible in the dashboard
 agent-browser open example.com
@@ -730,7 +731,7 @@ agent-browser open example.com
 agent-browser dashboard stop
 ```
 
-The dashboard runs independently of browser sessions on port 4848 (configurable with `--port`). All sessions automatically stream to the dashboard.
+The dashboard runs independently of browser sessions on `0.0.0.0:4848` by default (configurable with `--host` and `--port`). All sessions automatically stream to the dashboard.
 
 ## Ready-to-Use Templates
 

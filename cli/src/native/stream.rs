@@ -1,5 +1,5 @@
 use serde_json::{json, Value};
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -163,14 +163,12 @@ impl StreamServer {
         session_id: String,
         allow_port_fallback: bool,
     ) -> Result<(Self, Arc<RwLock<Option<Arc<CdpClient>>>>), String> {
-        let addr = format!("127.0.0.1:{}", preferred_port);
+        let addr = format!("0.0.0.0:{}", preferred_port);
         let listener = match TcpListener::bind(&addr).await {
             Ok(l) => l,
-            Err(_) if allow_port_fallback && preferred_port != 0 => {
-                TcpListener::bind("127.0.0.1:0")
-                    .await
-                    .map_err(|e| format!("Failed to bind stream server: {}", e))?
-            }
+            Err(_) if allow_port_fallback && preferred_port != 0 => TcpListener::bind("0.0.0.0:0")
+                .await
+                .map_err(|e| format!("Failed to bind stream server: {}", e))?,
             Err(e) => return Err(format!("Failed to bind stream server: {}", e)),
         };
 
@@ -1423,7 +1421,14 @@ pub fn is_allowed_origin(origin: Option<&str>) -> bool {
             }
             if let Ok(url) = url::Url::parse(o) {
                 let host = url.host_str().unwrap_or("");
-                host == "localhost" || host == "127.0.0.1" || host == "::1" || host == "[::1]"
+                host == "localhost"
+                    || host
+                        .parse::<IpAddr>()
+                        .map(|ip| match ip {
+                            IpAddr::V4(ipv4) => ipv4.is_loopback() || ipv4.is_private(),
+                            IpAddr::V6(ipv6) => ipv6.is_loopback(),
+                        })
+                        .unwrap_or(false)
             } else {
                 false
             }
@@ -1478,9 +1483,9 @@ pub async fn ack_screencast_frame(
 }
 
 /// Standalone dashboard HTTP server (no browser, no WebSocket streaming).
-/// Serves static files and `/api/sessions` for session discovery.
-pub async fn run_dashboard_server(port: u16) {
-    let addr = format!("127.0.0.1:{}", port);
+/// Serves static files and `/api/sessions` for session discovery on the configured host.
+pub async fn run_dashboard_server(host: &str, port: u16) {
+    let addr = format!("{}:{}", host, port);
     let listener = match TcpListener::bind(&addr).await {
         Ok(l) => l,
         Err(e) => {
@@ -1766,6 +1771,13 @@ mod tests {
     fn test_allowed_origin_localhost() {
         assert!(is_allowed_origin(Some("http://localhost:3000")));
         assert!(is_allowed_origin(Some("http://127.0.0.1:8080")));
+    }
+
+    #[test]
+    fn test_allowed_origin_private_lan_ip() {
+        assert!(is_allowed_origin(Some("http://10.0.2.110:4848")));
+        assert!(is_allowed_origin(Some("http://172.16.1.10:4848")));
+        assert!(is_allowed_origin(Some("http://192.168.1.20:4848")));
     }
 
     #[test]

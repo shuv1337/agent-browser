@@ -607,6 +607,7 @@ agent-browser dashboard install
 
 # Start the dashboard server (runs in background on port 4848)
 agent-browser dashboard start
+agent-browser dashboard start --host 127.0.0.1   # Loopback only
 agent-browser dashboard start --port 8080   # Custom port
 
 # All sessions are automatically visible in the dashboard
@@ -616,7 +617,7 @@ agent-browser open example.com
 agent-browser dashboard stop
 ```
 
-The dashboard runs as a standalone background process on port 4848, independent of browser sessions. It stays available even when no sessions are running. All sessions automatically stream to the dashboard.
+The dashboard runs as a standalone background process on `0.0.0.0:4848` by default, independent of browser sessions. Use `--host` to restrict it to a specific interface such as `127.0.0.1`. It stays available even when no sessions are running, and all sessions automatically stream to the dashboard.
 
 The dashboard displays:
 - **Live viewport** -- real-time JPEG frames from the browser
@@ -978,7 +979,7 @@ The WebSocket server streams the browser viewport and accepts input events.
 
 ### WebSocket Protocol
 
-Connect to `ws://localhost:9223` to receive frames and send input:
+Connect to `ws://<server-host>:9223` to receive frames and send input:
 
 **Receive frames:**
 
